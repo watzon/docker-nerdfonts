@@ -17,7 +17,7 @@ This project provides a Docker container with pre-installed Nerd Fonts, designed
 Pull the container:
 
 ```bash
-docker pull yourusername/nerdfonts:latest
+docker pull ghcr.io/watzon/docker-nerdfonts:latest
 ```
 
 ### Using with Docker Compose
@@ -44,7 +44,7 @@ Copy fonts from this container in a multi-stage build:
 
 ```dockerfile
 # First stage - copy fonts
-FROM watzon/nerdfonts:latest as fonts
+FROM ghcr.io/watzon/docker-nerdfonts:latest as fonts
 
 # Your final image
 FROM your-base-image:tag
