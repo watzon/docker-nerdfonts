@@ -1,0 +1,60 @@
+name: Build Nerd Fonts Container
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly at midnight on Sunday
+  workflow_dispatch:  # Allow manual triggers
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check for new release
+        id: check-release
+        run: |
+          chmod +x ./scripts/check-release.sh
+          ./scripts/check-release.sh
+        
+      - name: Commit version file
+        if: steps.check-release.outputs.should_build == 'true'
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add .last_version
+          git commit -m "Update .last_version to ${{ steps.check-release.outputs.version }}"
+          git push
+        
+      - name: Set up Docker Buildx
+        if: steps.check-release.outputs.should_build == 'true'
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Login to GitHub Container Registry
+        if: steps.check-release.outputs.should_build == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Login to Docker Hub
+      #   if: steps.check-release.outputs.should_build == 'true'
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+      - name: Build and push
+        if: steps.check-release.outputs.should_build == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/docker-nerdfonts:latest
+            ghcr.io/${{ github.repository }}/docker-nerdfonts:${{ steps.check-release.outputs.version }}
+            # watzon/nerdfonts:latest
+            # watzon/nerdfonts:${{ steps.check-release.outputs.version }} 
