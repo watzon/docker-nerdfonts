@@ -1,7 +1,7 @@
 FROM alpine:latest
 
 # Install required packages for downloading and extracting
-RUN apk add --no-cache curl jq tar xz
+RUN apk add --no-cache bash curl jq tar xz
 
 # Copy the download script
 COPY scripts/download-fonts.sh /usr/local/bin/
